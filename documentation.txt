@@ -1,0 +1,130 @@
+
+      Pre-requisite:
+            --    Ansible should be installed of version 2.7
+            --    Make two vm
+            --    Do entry in /etc/ansible/hosts file
+
+
+Q1.   Create Kubernetes Cluster through ansible (1 master + 1 node)
+Sol.
+1.    Downloaded kube1.qcow2 image. Made two snapshots: master and node1
+2.    Using snapshots I made two virtual machines.
+3.    Made ansible set up to run the playbook.
+ 
+                     Run the ansible script: k8.yml
+ Note: I used adhoc repository to download the docker and kubernetes packages and maintain the cluster   
+      Kubernetes cluster is ready. Now you can deploy applications.
+
+   
+##############################################################################################
+
+
+Q2.   Deployment of 3 sample apps on this Kubernetes Cluster.
+Sol.
+-->   Deployed webapp1 using html.  Refer webapp1-html
+-->   Deployed webapp2 using php. Refer webapp2-php
+-->   Deployed webapp3 using nodejs. Refer webapp3-nodejs.
+
+       Follow the below steps to deploy an application.
+
+ ############ sample application 1 ##################################
+
+             cd webapp1-html
+             docker build -t htmlapp .
+             docker images
+             docker tag htmlapp registry:5000/htmlapp
+             docker push registry:5000/htmlapp
+             kubectl create deployment webapp1 --image=registry:5000/htmlapp
+             kubectl get pods -o wide
+             kubectl expose deployment webapp1 --port=80 --type=NodePort
+             kubectl get pods -o wide
+             kubectl get svc -o wide
+
+
+############ sample application 2 ####################################
+
+             cd webapp2-php
+             docker build -t phpapp .
+             docker images
+             docker tag 433abf173e53 registry:5000/phpapp
+	     docker push registry:5000/phpapp
+             kubectl create deployment webapp2 --image=registry:5000/phpapp
+             kubectl get pods -o wide
+             kubectl expose deployment webapp2 --port 80 --type=NodePort
+             kubectl get svc -o wide
+             
+
+########### sample application 3 ####################################
+             
+             cd webapp3-nodejs
+             docker build -t nodejsapp .
+             docker images
+             docker tag nodejsapp registry:5000/nodejsapp
+             docker push registry:5000/nodejsapp
+             kubectl create deployment webapp3 --image=registry:5000/nodejsapp
+             kubectl get pods 
+             kubectl expose deployment webapp3 --port 3000 --type=NodePort
+             kubectl get svc -o wide
+              
+             Now you can use master ip or node1 ip with exposed port number to see the web application.
+
+
+#####################################################################################################
+
+
+Q3.   All three apps should be communicating through Service Discovery.
+Sol.
+       When a pod is running, pod is assign a name itself and makes internal dns : check pods /etc/hosts file entry for this
+       check for dns server ip using 
+           
+       kubectl get services kube-dns 	-n kube-system
+ 
+	For communicating 3 apps we have to give dns server ip in /etc/resolv.conf file like
+
+                	nameserver dns serverip  --  this is CLUSTER IP
+                        dns server ip 10.96.0.10             
+
+               search  default.svc.cluster.local  svc.cluster.local  cluster.local 
+
+
+#####################################################################################################
+
+
+Q4.   Deploy Kubernetes Dashboard with Admin and Read-only Permission Token.
+Sol.        
+      Created a dashboard from the given url and then follow the given steps:
+
+1.     kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
+2.     kubectl get svc --all-namespaces
+3.     kubectl -n kube-system edit svc kubernetes-dashboard
+4.     kubectl -n kube-system get svc kubernetes-dashboard
+5.     kubectl create clusterrolebinding kubernetes-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+6.     kubectl -n kube-system describe secrets kubernetes-dashboard-token-<Tab>
+7.     kubectl get nodes -o wide   	
+      
+                      open in browser:  https://master ip:service port
+
+
+########################################################################################################
+
+
+Q5.   Write a shell script to print fibonacci series.
+Sol.  Run the script: fibonacci.sh
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
